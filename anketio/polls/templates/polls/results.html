@@ -1,0 +1,64 @@
+{% extends "polls/base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0 rounded-4 p-4">
+            <h2 class="text-center fw-bold mb-4 text-primary">{{ question.question_text }}</h2>
+            
+            <div class="row align-items-center">
+                <!-- Sol Taraf: Grafik -->
+                <div class="col-md-6 mb-4">
+                    <canvas id="pollChart"></canvas>
+                </div>
+
+                <!-- Sağ Taraf: Yüzdelik Çubuklar -->
+                <div class="col-md-6">
+                    <h5 class="mb-3">Oy Dağılımı:</h5>
+                    {% for choice in question.choice_set.all %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-semibold">{{ choice.choice_text }}</span>
+                                <span class="text-muted">{{ choice.votes }} Oy</span>
+                            </div>
+                            <!-- Yüzdeyi buradan alıyoruz: choice.get_percent -->
+                            <div class="progress" style="height: 15px;">
+                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: {{ choice.get_percent }}%">
+                                </div>
+                            </div>
+                            <small class="text-primary fw-bold">{{ choice.get_percent }}%</small>
+                        </div>
+                    {% endfor %}
+                    <p class="text-muted small mt-3">Toplam Oy: {{ question.get_total_votes }}</p>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4 border-top pt-3">
+                <a href="{% url 'polls:index' %}" class="btn btn-outline-secondary rounded-pill">Listeye Dön</a>
+                <a href="{% url 'polls:detail' question.id %}" class="btn btn-primary rounded-pill">Yeniden Oyla</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('pollChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for choice in question.choice_set.all %}"{{ choice.choice_text|escapejs }}",{% endfor %}],
+            datasets: [{
+                data: [{% for choice in question.choice_set.all %}{{ choice.votes }},{% endfor %}],
+                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6610f2'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+{% endblock %}
